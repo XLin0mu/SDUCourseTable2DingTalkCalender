@@ -99,11 +99,11 @@ const DefaultDict = Dict(
     )
 )
 
-function deal_discrete_gap_periods!(periods, gap_start, gap_end, lessons, lesson_struct, term_begin_at)
-    for i in gap_start : gap_end
+function deal_discrete_gap_periods!(periods, scatter_start, scatter_end, lessons, lesson_struct, term_begin_at)
+    for i in scatter_start : scatter_end
         lesson = deepcopy(lesson_struct)
-        lesson["start"]["dateTime"] = term_begin_at[1] + Week(periods[i][1])
-        lesson["end"]["dateTime"] = term_begin_at[1] + Week(periods[i][1])
+        lesson["start"]["dateTime"] = term_begin_at[1] + Week(periods[i][1]-1)
+        lesson["end"]["dateTime"] = term_begin_at[1] + Week(periods[i][1]-1)
         pop!(lesson, "recurrence")
         push!(lessons, deepcopy(lesson))
     end
@@ -116,7 +116,7 @@ function deal_gap_periods!(periods, gap_start, gap_end, lessons, lesson_struct, 
         return nothing
     else
         #estimate discrete or regular situation
-        bool_vec = [periods[i+2][1] - periods[i][1] == 2periods[i+1][1]
+        bool_vec = [periods[i+2][1] + periods[i][1] == 2periods[i+1][1]
             for i in gap_start : gap_end - 2]
 
         #initialize check point
@@ -124,10 +124,14 @@ function deal_gap_periods!(periods, gap_start, gap_end, lessons, lesson_struct, 
         chk_point = 1
         #traverse all bool_vec
         for index_bool in eachindex(bool_vec)
-            if bool_vec[index_bool] != chk_at
-                if chk_at
+            if (bool_vec[index_bool] != chk_at ? (index_bool -= 1; true) : false) || index_bool == gap_end - gap_start -2 +1    #是否进行结算
+                if !chk_at
                     #settle down befores
-                    deal_discrete_gap_periods!(periods, gap_start-1 + chk_point, gap_start-1 + index_bool-1, lessons, lesson_struct, term_begin_at)
+                    scatter_start = gap_start-1 + chk_point
+                    scatter_end = gap_start-1 + index_bool
+                    if scatter_start <= scatter_end
+                        deal_discrete_gap_periods!(periods, scatter_start, scatter_end, lessons, lesson_struct, term_begin_at)
+                    end
                 else
                     #settle down befores
                     lesson = deepcopy(lesson_struct)
@@ -136,10 +140,11 @@ function deal_gap_periods!(periods, gap_start, gap_end, lessons, lesson_struct, 
                     lesson["recurrence"]["pattern"]["interval"] = gap_of_week
                     lesson["recurrence"]["range"] = Dict(
                         "type" => "numbered",
-                        "numberOfOccurrences" => index_bool - chk_point + 1
+                        "numberOfOccurrences" => index_bool+2 - chk_point + 1   #钉钉日历中，重复n次实际上会包含本次
                     )
                     push!(lessons, deepcopy(lesson))
                 end
+                index_bool += 1
                 #modify check point
                 chk_at = !chk_at
                 chk_point = index_bool

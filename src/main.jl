@@ -1,7 +1,8 @@
 
-#cd("E:\\AhMyGit\\2_MyGitHub\\Mine\\SDUCourse2DingTalkCalender\\src")
+#cd("E:\\AhMyGit\\2_MyGitHub\\Mine\\SDUCourseTable2DingTalkCalender\\src")
 #access_token = 1
 #unionId = 1
+table_dir = "../Table.xlsx"
 #debug args is upon
 include("./DingTalkCalendarAPI/DTCalendarAPI.jl")
 include("./DingTalkCalendarAPI/lib.jl")
