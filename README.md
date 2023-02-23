@@ -1,0 +1,2 @@
+# SDUCourseTable2DingTalkCalender
+把山大教务直出的课程表（其他学校的也可以，扩展性挺高）自动发送到钉钉日历，自动创建对应日程
