@@ -4,6 +4,11 @@
 
 调整参数后，运行 `./src/_main_.jl` 即可。
 
+成果如图：
+
+![image](https://github.com/Xlin0mu/SDUCourseTable2DingTalkCalender/assets/99205570/900c7257-f341-480f-a8de-819f22b16ec1)
+
+
 # `config.jl` 配置
 
 钉钉企业内部应用开发的参数，还有改权限，哪里卡住发issue
