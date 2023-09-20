@@ -1,103 +1,9 @@
+module xlsx2Dict
+export xlsx2DingTalkDict
+
 using XLSX
 using Dates
 using TimeZones
-
-const DefaultRuleOfTable = Dict(
-    "work_sheet" => "Sheet1",
-    "index_ref" => "B4:H8",
-    "week_begin_at" => Monday,
-    "term_begin_at" => (Date(2023, 2, 13), tz"Asia/Shanghai"),    #暂时只支持从周一开始
-
-    "course_struct" => Dict(
-        "daily_course_amount" => 5,
-        "course_periods" => Tuple{Time, Time}[
-            (Time(8), Time(9,50)),
-            (Time(10,10), Time(12)),
-            (Time(14), Time(15,50)),
-            (Time(16,10), Time(18,00)),
-            (Time(19), Time(20,50))
-        ]
-    )
-)
-
-#cell_struct 的元素是
-#"course name"
-#以下三个元素，如果有出现多次的话会自动加入分隔符拼接成新字符串
-#(可以在后面添加处理函数)
-#"description"
-#"period"
-#"location"
-#其中period比较特殊，它的返回值是Vector{Any}，内容是第n周的周数，或者
-const DefaultRuleOfCourseCell = Dict(
-    "element_split" => '\n',
-    "cell_struct" => [
-        nothing,
-        "course name",
-        nothing,
-        nothing,
-        "description",
-        "period",
-        "location",
-        nothing
-    ],
-    "syntax" => Dict{String, Function}(
-        "course name" => x::String -> x,
-        "description" => x::String -> "教师："*x,
-        "location" => x::String -> x,
-        "period" => function (x::String)
-            period = Any[]
-            col = collect(eachmatch(r"(?<=第).*?(?=周)", x))
-            for eachcol in col
-                push!(period, parse.(Int, split(eachcol.match, '-')))
-            end
-            return period
-        end
-    )
-)
-
-const DefaultDict = Dict(
-    "summary" => "test course",
-    "description" => "something about this event",
-    "start" => Dict{String, Any}(
-      #"date" : ,
-      "dateTime" => "2023-02-22T10:15:30+08:00",
-      "timeZone" => "Asia/Shanghai"
-    ),
-    "end" => Dict{String, Any}(
-      #"date" : ,
-      "dateTime" => "2023-02-22T13:15:30+08:00",
-      "timeZone" => "Asia/Shanghai"
-    ),
-    "isAllDay" => false,
-    "recurrence" => Dict(
-      "pattern" => Dict(
-        "type" => "weekly",
-        #"dayOfMonth" : ,
-        "daysOfWeek" => "monday",
-        #"index" : ,
-        "interval" => 1
-        ),
-      "range" => Dict(
-        "type" => "endDate",
-        "endDate" => "2023-12-31T10:15:30+08:00",
-        #"numberOfOccurrences" :
-      )
-    ),
-    "attendees" => [ Dict(
-      "id" => "bEAY8JFj2f5CaBGd4CCBCgiEiE",
-      "isOptional" => true
-    ) ],
-    "location" => Dict(
-      "displayName" => "207d"
-    ),
-    "reminders" => [ Dict(
-      "method" => "dingtalk",
-      "minutes" => 30
-    ) ],
-    "extra" => Dict(
-      "noChatNotification" => "true", "noPushNotification" => "true"
-    )
-)
 
 function deal_discrete_gap_periods!(periods, scatter_start, scatter_end, lessons, lesson_struct, term_begin_at)
     for i in scatter_start : scatter_end
@@ -227,7 +133,6 @@ function deal_course_cell(default_struct::Dict{String, Any}, course_cell::String
     return lessons
 end
 
-
 """
 将山大学生学期课表(.xlsx)转换为符合钉钉日程api的Dict类型
 有课单元格的格式和没课单元格的格式必须分别统一, 课程表范围内不要出现第三种格式
@@ -236,17 +141,21 @@ ruleofTable => 课程表的结构信息
 ruleofCourseCell => 单元格的结构信息
 default_struct => 日历api的课程表默认结构(对应的Dict)
 """
-function xlsx2DingTalkDict(xlsx_file::String; ruleofTable::Dict{String, Any} = DefaultRuleOfTable, ruleofCourseCell::Dict{String, Any} = DefaultRuleOfCourseCell, default_struct::Dict{String, Any} = DefaultDict)
+function xlsx2DingTalkDict(xlsx_file::String, configuration::Dict{String, Dict{String, Any}})
+    rules_of_table          =   configuration["rules_of_table"]
+    rules_of_course_cell    =   configuration["rules_of_course_cell"]
+    api_struct              =   configuration["api_struct"]
+
     #read data from xlsx
-    table = XLSX.readdata(xlsx_file, ruleofTable["work_sheet"], ruleofTable["index_ref"])
+    table = XLSX.readdata(xlsx_file, rules_of_table["work_sheet"], rules_of_table["index_ref"])
 
     #check range in one day
-    if size(table)[1] > ruleofTable["course_struct"]["daily_course_amount"]
+    if size(table)[1] > rules_of_table["course_struct"]["daily_course_amount"]
         throw(ArgumentError("size of table exceed daily_course_amount"))
     end
 
     #check if term is begin at Monday
-    if dayofweek(ruleofTable["term_begin_at"][1]) != Monday
+    if dayofweek(rules_of_table["term_begin_at"][1]) != Monday
         throw(ArgumentError("term is not begin at Monday"))
     end
 
@@ -258,22 +167,22 @@ function xlsx2DingTalkDict(xlsx_file::String; ruleofTable::Dict{String, Any} = D
         for sequence in 1 : size(table)[1]
 
             #set value of time offset
-            t = Day(day_in_week + ruleofTable["week_begin_at"] - 2)
-            se = ruleofTable["course_struct"]["course_periods"][sequence]
+            t = Day(day_in_week + rules_of_table["week_begin_at"] - 2)
+            se = rules_of_table["course_struct"]["course_periods"][sequence]
 
             #get cell
             cell = table[sequence, day_in_week]
 
             #ignore invalid cell
             if  !ismissing(cell)
-                lessons = deal_course_cell(default_struct, cell, ruleofTable["term_begin_at"], ruleofCourseCell)
+                lessons = deal_course_cell(api_struct, cell, rules_of_table["term_begin_at"], rules_of_course_cell)
 
                 #modify the time of lesson
                 for lesson in lessons
 
                     #apply offset and convert to String type
-                    lesson["start"]["dateTime"] = Dates.format(ZonedDateTime((lesson["start"]["dateTime"]  + t + se[1]), ruleofTable["term_begin_at"][2]), "yyyy-mm-ddTHH:MM:SSzzzz")
-                    lesson["end"]["dateTime"] = Dates.format(ZonedDateTime((lesson["end"]["dateTime"]  + t + se[2]), ruleofTable["term_begin_at"][2]), "yyyy-mm-ddTHH:MM:SSzzzz")
+                    lesson["start"]["dateTime"] = Dates.format(ZonedDateTime((lesson["start"]["dateTime"]  + t + se[1]), rules_of_table["term_begin_at"][2]), "yyyy-mm-ddTHH:MM:SSzzzz")
+                    lesson["end"]["dateTime"] = Dates.format(ZonedDateTime((lesson["end"]["dateTime"]  + t + se[2]), rules_of_table["term_begin_at"][2]), "yyyy-mm-ddTHH:MM:SSzzzz")
 
                     #set arg for lesson which recurrence
                     if "recurrence" in keys(lesson)
@@ -284,8 +193,10 @@ function xlsx2DingTalkDict(xlsx_file::String; ruleofTable::Dict{String, Any} = D
                     push!(lessons_set, deepcopy(lesson))
                 end
             end
+            println("good with day_in_week=$(day_in_week) and sequence=$(sequence))")
         end
     end
 
     return deepcopy(lessons_set)
+end
 end

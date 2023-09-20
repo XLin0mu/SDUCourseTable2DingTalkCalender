@@ -2,11 +2,15 @@
 
 需要自己把.xls文件用excel打开，然后另存为.xlsx格式
 
-参数写到 config.toml里面
+钉钉信息写到 info.toml 里面
 
 运行 `./src/main.jl` 后，调整参数 `table_dir` 为课程表的路径名即可。
 
-# config.toml
+# 注意
+
+非山大首次使用需要自行修改 dictConfig.jl 中内容。
+
+# info.toml
 
 钉钉企业内部应用开发的参数，还有改权限，哪里卡住发issue
 
