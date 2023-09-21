@@ -6,8 +6,7 @@
 
 成果如图：
 
-![image](https://github.com/Xlin0mu/SDUCourseTable2DingTalkCalender/assets/99205570/900c7257-f341-480f-a8de-819f22b16ec1)
-
+![image](https://github.com/Xlin0mu/SDUCourseTable2DingTalkCalender/assets/99205570/7e0b2a26-9cf4-4820-b1c2-bae5c4a478e9)
 
 # `config.jl` 配置
 
