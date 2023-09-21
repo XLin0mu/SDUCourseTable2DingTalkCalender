@@ -154,7 +154,7 @@ function modidy_course_event!(event, course_item::Vector{String})
     length(course_item) != 6 ? error("invalid course item as follow:...\n\n$(course_item)\n\n(as below)") : nothing
     event["summary"] = course_item[1]
     event["description"] = "课程名："*course_item[1]*"\n教师："*course_item[4]*"\n上课地点："*course_item[6]
-    event["location"] = course_item[6]
+    event["location"]["displayName"] = course_item[6]
     return nothing
 end
 
