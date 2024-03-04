@@ -1,4 +1,4 @@
-course_start_date = Date(2023,9,4)
+course_start_date = Date(2024,2,26)
 attendees_id = ""
 AppKey = ""
 AppSecret = ""

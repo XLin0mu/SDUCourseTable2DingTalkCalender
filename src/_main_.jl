@@ -1,8 +1,14 @@
 #相对路径需从/src/目录下出发。
 include("./Preparation.jl")
 include("./DingTalkCalendarLib.jl")
+
+using Dates
 include("../data/config.jl")
+#include("../data/config_test.jl")
+
 using Main.DingTalkCalendarLib
+using Main.Preparation
+
 xlsxfile = "../data/table.xlsx"
 
 events = generate_course_events(xlsxfile, course_start_date, attendees_id)

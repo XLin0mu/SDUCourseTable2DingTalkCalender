@@ -1,3 +1,6 @@
+module Preparation
+export generate_course_events
+
 using XLSX
 using Dates
 using TimeZones
@@ -19,15 +22,26 @@ function get_grid_period(grid_period::Tuple{Int64, Int64};
         (Time(14), Time(15, 50)),
         (Time(16, 10), Time(18)),
         (Time(19), Time(20, 50))
-    ])
+    ]):: Tuple{Day, Tuple{Time, Time}}
     return (Day(week_begin + grid_period[2] -1), course_period[grid_period[1]])
 end
 
-function get_course_items(xlsxfile::String; work_table::String = "Sheet1", index_ref::String = "B4:H8")
+function get_course_items(xlsxfile::String; work_table::String = "Sheet1", index_ref::String = "B4:H8")::Vector{Tuple{Vector{String},  Tuple{Day, Tuple{Time, Time}}}}
     table = XLSX.readdata(xlsxfile, work_table, index_ref)
     #items = Tuple{String, Tuple{Int64, Int64}}[]
     items = Tuple{Vector{String}, Tuple{Day, Tuple{Time, Time}}}[]
     for row in 1 : size(table)[1], col in 1 : size(table)[2]
+        lines = split(table[row, col], "\n")
+        println(lines[2])
+        println("row: ", row, "\t\tcol:", col)
+        itemIds = findall( x -> match(r"sd\d{8}", x)!=nothing, lines)
+        if length(itemIds) != 0
+            for itemId in itemIds
+                println("itemId : ", itemId)
+                push!(items, (lines[itemId - 2 : itemId + 3], get_grid_period((row, col))))
+            end
+        end
+#=
         splits = split(table[row, col], "\n\n")
         if length(splits) == 1
             push!(items, (split_course_item(String(table[row, col])), get_grid_period((row, col))))
@@ -44,7 +58,7 @@ function get_course_items(xlsxfile::String; work_table::String = "Sheet1", index
                 end
                 push!(items, (split_course_item(String(splits[i])), get_grid_period((row, col))))
             end
-        end
+        end =#
     end
     return items
 end
@@ -187,4 +201,5 @@ end
 
 function check_course_table(events)
 
+end
 end
