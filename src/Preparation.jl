@@ -1,5 +1,5 @@
 module Preparation
-export generate_course_events
+export generate_course_events, new_event
 
 using XLSX
 using Dates
