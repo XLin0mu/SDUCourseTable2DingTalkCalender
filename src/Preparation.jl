@@ -28,16 +28,12 @@ end
 
 function get_course_items(xlsxfile::String; work_table::String = "Sheet1", index_ref::String = "B4:H8")::Vector{Tuple{Vector{String},  Tuple{Day, Tuple{Time, Time}}}}
     table = XLSX.readdata(xlsxfile, work_table, index_ref)
-    #items = Tuple{String, Tuple{Int64, Int64}}[]
     items = Tuple{Vector{String}, Tuple{Day, Tuple{Time, Time}}}[]
     for row in 1 : size(table)[1], col in 1 : size(table)[2]
         lines = split(table[row, col], "\n")
-        println(lines[2])
-        println("row: ", row, "\t\tcol:", col)
         itemIds = findall( x -> match(r"sd\d{8}", x)!=nothing, lines)
         if length(itemIds) != 0
             for itemId in itemIds
-                println("itemId : ", itemId)
                 push!(items, (lines[itemId - 2 : itemId + 3], get_grid_period((row, col))))
             end
         end
@@ -172,7 +168,7 @@ function modidy_course_event!(event, course_item::Vector{String})
     return nothing
 end
 
-function check_course_repeat!(events::Vector{Dict})
+function modify_course_repeat!(events::Vector{Dict})
     for i_event in eachindex(events)
         for i_other_event in eachindex(events)
             events[i_event] == events[i_other_event] && i_event != i_other_event ? events[i_other_event] = Dict() : nothing
@@ -194,12 +190,11 @@ end
 function generate_course_events(xlsxfile, course_start_date, attendees_id)
     course_items = get_course_items(xlsxfile);
     events = deal_course_table(course_items, course_start_date);
-    check_course_repeat!(events);
+    modify_course_repeat!(events);
     modidy_event_attendees!(events, attendees_id);
     return events
 end
 
 function check_course_table(events)
 
-end
 end
