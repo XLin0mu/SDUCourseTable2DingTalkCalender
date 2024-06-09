@@ -69,12 +69,3 @@ function exam_import(str::String; unionId=unionId)
 end
 
 exam_import(str)
-
-
-
-"""
-
-
-"""
-
-
