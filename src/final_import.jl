@@ -45,7 +45,9 @@ function exam_import(str::String; unionId=unionId)
         "dateTime" => ar[2] * 'T' * ar[4] * ":00+08:00",
         "timeZone" => "Asia/Shanghai"
     )
-    ne["location"] = ar[5]
+    ne["location"] = Dict(
+        "displayName" => ar[5]
+    )
     ne["reminders"] = [Dict(
             "method" => "dingtalk",
             "minutes" => 15
@@ -67,5 +69,3 @@ function exam_import(str::String; unionId=unionId)
     calendar_create_events(CalendarEvents(ne), access_token, unionId)
 
 end
-
-exam_import(str)
