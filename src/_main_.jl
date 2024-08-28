@@ -1,14 +1,16 @@
-#相对路径需从/src/目录下出发。
-include("./Preparation.jl");
-include("./DingTalkCalendarLib.jl");
+using Pkg
+Pkg.add(["HTTP", "TOML", "JSON", "XLSX", "Dates", "TimeZones", "DataFrames"])
+
+include("./src/Preparation.jl");
+include("./src/DingTalkCalendarLib.jl");
 
 using Dates
-include("../data/config.jl");
-#include("../data/config_test.jl");
+include("./data/config.jl");
+#include("./data/config_test.jl");
 
 using Main.DingTalkCalendarLib
 
-xlsxfile = "../data/table.xlsx"
+xlsxfile = "data/table.xlsx"
 
 events = generate_course_events(xlsxfile, course_start_date, attendees_id)
 access_token = get_token(AppKey, AppSecret)
