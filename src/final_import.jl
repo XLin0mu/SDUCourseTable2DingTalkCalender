@@ -9,11 +9,9 @@ include("./DingTalkCalendarLib.jl")
 using Main.DingTalkCalendarLib
 using Main.Preparation
 
-
 using Dates
 include("../data/config.jl")
 #include("../data/config_test.jl")
-
 
 access_token = get_token(AppKey, AppSecret)
 userId = get_userId(phoneNumber, access_token)

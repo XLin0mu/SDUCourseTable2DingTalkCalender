@@ -1,5 +1,5 @@
 module DingTalkCalendarLib
-export get_token, get_userId, get_unionId, get_user_info, CalendarEvents, calendar_create_events
+export get_token, get_userId, get_unionId, get_user_info, calendar_create_events
 using HTTP
 using TOML
 using JSON
@@ -61,26 +61,20 @@ function get_user_info(app_key::String, app_secret::String, phone_number::String
 end
 
 """
-数据类型标记"""
-struct CalendarEvents
-    config::Dict
-end
-
-"""
 创建日历日程"""
 function calendar_create_events(
-    event::CalendarEvents,
+    event::Dict,
     accessToken::String,
-    userId::String;
+    unionId::String;
     calendarId::String = "primary")
 
-    url = "https://api.dingtalk.com/v1.0/calendar/users/"*userId*"/calendars/"*calendarId*"/events"
+    url = "https://api.dingtalk.com/v1.0/calendar/users/"*unionId*"/calendars/"*calendarId*"/events"
     header = Dict(
         "Content-Type" => "application/json",
         "x-acs-dingtalk-access-token" => accessToken
     )
-    body = event.config
+    body = event
     resp = HTTP.post(url, header, JSON.json(body))
-    println("Adding Schedule $(event.config["summary"]) Succeed!")
+    println("Adding Schedule $(event["summary"]) Succeed!")
 end
 end
