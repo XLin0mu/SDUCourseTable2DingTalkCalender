@@ -11,7 +11,7 @@ include("../data/config.jl");
 using Main.DingTalkCalendarLib
 using Main.Preparation
 
-xlsxfile = "./data/table.xlsx"
+xlsxfile = "../data/table.xlsx"
 
 events = generate_course_events(xlsxfile, course_start_date, attendees_ids)
 userInfo = get_user_info(AppKey, AppSecret, phoneNumber)

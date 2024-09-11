@@ -30,31 +30,33 @@ function get_course_items(xlsxfile::String; work_table::String="Sheet1", index_r
     table = XLSX.readdata(xlsxfile, work_table, index_ref)
     items = Tuple{Vector{String},Tuple{Day,Tuple{Time,Time}}}[]
     for row in 1:size(table)[1], col in 1:size(table)[2]
-        lines = split(table[row, col], "\n")
-        itemIds = findall(x -> match(r"sd\d{8}", x) !== nothing, lines)
-        if length(itemIds) != 0
-            for itemId in itemIds
-                push!(items, (lines[itemId-2:itemId+3], get_grid_period((row, col))))
+        if table[row, col] !== missing
+            lines = split(table[row, col], "\n")
+            itemIds = findall(x -> match(r"sd\d{8}", x) !== nothing, lines)
+            if length(itemIds) != 0
+                for itemId in itemIds
+                    push!(items, (lines[itemId-2:itemId+3], get_grid_period((row, col))))
+                end
             end
-        end
-        #=
-                splits = split(table[row, col], "\n\n")
-                if length(splits) == 1
-                    push!(items, (split_course_item(String(table[row, col])), get_grid_period((row, col))))
-                else
-                    for i in eachindex(splits)
-                        if splits[i] != "" && length(split_course_item(String(splits[i]))) < 6
-                            if length(splits) == i
-                                @error "The course grid at \"row $(row) col $(col)\" missing something, please check it in .xlsx file."
+            #=
+                    splits = split(table[row, col], "\n\n")
+                    if length(splits) == 1
+                        push!(items, (split_course_item(String(table[row, col])), get_grid_period((row, col))))
+                    else
+                        for i in eachindex(splits)
+                            if splits[i] != "" && length(split_course_item(String(splits[i]))) < 6
+                                if length(splits) == i
+                                    @error "The course grid at \"row $(row) col $(col)\" missing something, please check it in .xlsx file."
+                                end
+                                splits[i] *= splits[i+1]
+                                splits[i+1] = ""
+                                @warn "The course grid at row \"$(row) col $(col)\" may missing something, please using function \"check_course_table\" for checking."
+                                break
                             end
-                            splits[i] *= splits[i+1]
-                            splits[i+1] = ""
-                            @warn "The course grid at row \"$(row) col $(col)\" may missing something, please using function \"check_course_table\" for checking."
-                            break
+                            push!(items, (split_course_item(String(splits[i])), get_grid_period((row, col))))
                         end
-                        push!(items, (split_course_item(String(splits[i])), get_grid_period((row, col))))
-                    end
-                end =#
+                    end =#
+        end
     end
     return items
 end
